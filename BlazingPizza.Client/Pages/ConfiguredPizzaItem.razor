@@ -1,0 +1,18 @@
+﻿<div class="cart-item">
+    <a @onclick="OnRemoved" class="delete-item">x</a>
+    <div class="title">@(Kota.Size)" @Kota.Special.Name</div>
+    <ul>
+        @foreach (var topping in Kota.Toppings)
+        {
+            <li>+ @topping.Topping.Name</li>
+        }
+    </ul>
+    <div class="item-price">
+        @Kota.GetFormattedTotalPrice()
+    </div>
+</div>
+
+@code {
+    [Parameter] public Kota Kota { get; set; }
+    [Parameter] public EventCallback OnRemoved { get; set; }
+}

@@ -1,0 +1,73 @@
+﻿@page "/checkout"
+
+@inject OrderState OrderState
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@inject IAccessTokenProvider TokenProvider
+@attribute [Authorize]
+
+<div class="main">
+
+    <EditForm Model="OrderState.Order.DeliveryAddress" OnValidSubmit="PlaceOrder">
+        <div class="checkout-cols">
+            <div class="checkout-order-details">
+                <h4>Review Order</h4>
+                <OrderReview Order="OrderState.Order" />
+            </div>
+
+            <div class="checkout-delivery-address">
+                <h4>Deliver to...</h4>
+                <AddressEditor Address="OrderState.Order.DeliveryAddress" />
+            </div>
+        </div>
+
+        <button type="submit" class="checkout-button btn btn-warning" disabled="@isSubmiting">Place order</button>
+        <DataAnnotationsValidator />
+    </EditForm>
+</div>
+
+
+@code
+{
+    bool isSubmiting = false;
+
+    [CascadingParameter] public Task<AuthenticationState> AuthenticationStateTask { get; set; }
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateTask;
+        if (!authState.User.Identity.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("authentication/login?redirectUri=/checkout", true);
+
+        }
+
+    }
+
+    async Task PlaceOrder()
+    {
+        isSubmiting = true;
+
+        var tokenResult = await TokenProvider.RequestAccessToken();
+        if (tokenResult.TryGetToken(out var accessToken))
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, "orders");
+            request.Content = JsonContent.Create(OrderState.Order);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Value);
+            var response = await HttpClient.SendAsync(request);
+            var newOrderId = await response.Content.ReadFromJsonAsync<int>();
+
+            OrderState.ResetOrder();
+            NavigationManager.NavigateTo($"myorders/{newOrderId}");
+        }
+        else
+        {
+            NavigationManager.NavigateTo(tokenResult.RedirectUrl);
+        }
+
+    }
+
+
+}
+

@@ -1,0 +1,28 @@
+﻿@foreach (var Kota in Order.Kotas)
+{
+    <p>
+        <strong>
+            @(Kota.Size)"
+            @Kota.Special.Name
+            R(@Kota.GetFormattedTotalPrice())
+        </strong>
+    </p>
+
+    <ul>
+        @foreach (var topping in Kota.Toppings)
+        {
+            <li>+ @topping.Topping.Name</li>
+        }
+    </ul>
+}
+
+<p>
+    <strong>
+        Total price:
+        R(@Order.GetFormattedTotalPrice())
+    </strong>
+</p>
+
+@code {
+    [Parameter] public Order Order { get; set; }
+}

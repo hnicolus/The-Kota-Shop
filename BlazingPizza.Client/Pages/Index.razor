@@ -1,0 +1,76 @@
+﻿@page "/"
+@inject HttpClient HttpClient
+@inject OrderState OrderState
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+
+<div class="main">
+
+    <ul class="pizza-cards">
+        @if (specials != null)
+        {
+            @foreach (var special in specials)
+            {
+                <li style="background-image:url('@special.ImageUrl')"
+                    @onclick="@(()=> OrderState.ShowConfigureKotaDialog(special))">
+                    <div class="pizza-info">
+                        <span class="title">@special.Name</span>
+                        @special.Description
+                        <span class="price">@special.GetFormattedBasePrice()</span>
+                    </div>
+                </li>
+            }
+        }
+    </ul>
+</div>
+<div class="sidebar">
+    @if (OrderState.Order.Kotas.Any())
+    {
+        <div class="order-contents">
+            <h2>Your order</h2>
+
+            @foreach (var configuredPizza in OrderState.Order.Kotas)
+            {
+                <ConfiguredPizzaItem Kota="configuredPizza" 
+                OnRemoved="@(() =>RemoveKota(configuredPizza))" />
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-cart">Choose a pizza<br>to get started</div>
+    }
+
+    <div class="order-total @(OrderState.Order.Kotas.Any() ? "" : "hidden")">
+        Total:
+        <span class="total-price">@OrderState.Order.GetFormattedTotalPrice()</span>
+        <a href="checkout" class="@(OrderState.Order.Kotas.Count == 0 ? "btn btn-warning disabled" : "btn btn-warning")">
+            Order >
+        </a>
+    </div>
+</div>
+
+@if (OrderState.ShowingConfigureDialog)
+{
+    <ConfigurePizzaDialog Kota="OrderState.ConfiguringKota"
+                          OnConfirm="OrderState.ConfirmConfigureKotaDialog"
+                          OnCancel="OrderState.CancelConfigureKotaDialog" />
+}
+
+@code{
+    List<KotaSpecial> specials;
+
+
+    async Task RemoveKota(Kota configuredPizza)
+    {
+        if (await JS.Confirm($"Remove {configuredPizza.Special.Name} Kota from the order?"))
+        {
+            OrderState.RemoveConfiguredKota(configuredPizza);
+        }
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        specials = await HttpClient.GetFromJsonAsync<List<KotaSpecial>>("specials");
+    }
+}

@@ -1,0 +1,24 @@
+﻿@inherits LayoutComponentBase
+
+
+    <div class="top-bar">
+        @*<img class="logo" src="img/logo.svg" />*@
+        <h2 class="logo-label">Earl's Stove</h2>
+        <NavLink href="" class="nav-tab" Match="NavLinkMatch.All">
+            @*<img src="img/pizza-slice.svg" />*@
+            <div>Kota Menu</div>
+        </NavLink>
+
+        <AuthorizeView>
+            <NavLink href="myorders" class="nav-tab">
+                @*<img src="img/bike.svg" />*@
+                <div>My Orders</div>
+            </NavLink>
+        </AuthorizeView>
+
+        <LoginDisplay />
+    </div>
+
+<div class="content">
+    @Body
+</div>
